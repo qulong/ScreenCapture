@@ -1,11 +1,8 @@
-package com.branch.www.screencapture;
+package com.demo.screencapture;
 
 import android.app.Application;
 import android.graphics.Bitmap;
 
-/**
- * Created by Ryze on 2016-7-20.
- */
 public class ScreenCaptureApplication extends Application {
 
 

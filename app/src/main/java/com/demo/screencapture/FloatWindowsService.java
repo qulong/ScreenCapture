@@ -1,4 +1,4 @@
-package com.branch.www.screencapture;
+package com.demo.screencapture;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -30,23 +30,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * Created by branch on 2016-5-25.
  * <p>
  * 启动悬浮窗界面
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class FloatWindowsService extends Service {
-
-
-    public static Intent newIntent(Context context, Intent mResultData) {
-
-        Intent intent = new Intent(context, FloatWindowsService.class);
-
-        if (mResultData != null) {
-            intent.putExtras(mResultData);
-        }
-        return intent;
-    }
 
     private MediaProjection mMediaProjection;
     private VirtualDisplay mVirtualDisplay;
@@ -56,7 +44,6 @@ public class FloatWindowsService extends Service {
 
     private ImageReader mImageReader;
     private WindowManager mWindowManager;
-
     private int mScreenWidth;
     private int mScreenHeight;
     private int mScreenDensity;
@@ -64,6 +51,7 @@ public class FloatWindowsService extends Service {
     Handler handler1 = new Handler();
     private int imgageSize = 8;
     Runnable csreenshotRunnable;
+    private SaveTask mSaveTask;
 
     @Override
     public void onCreate() {
@@ -115,12 +103,12 @@ public class FloatWindowsService extends Service {
         mScreenHeight = metrics.heightPixels;
 //    mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGB_888, 1);
         mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
-        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
-            @Override
-            public void onImageAvailable(ImageReader reader) {
-
-            }
-        },handler1);
+//        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+//            @Override
+//            public void onImageAvailable(ImageReader reader) {
+//
+//            }
+//        },handler1);
 
     }
 
@@ -160,9 +148,9 @@ public class FloatWindowsService extends Service {
             try {
                 image = mImageReader.acquireLatestImage();
                 imgageSize--;
-                Log.w("startCapture","s="+imgageSize);
+                Log.w("startCapture", "s=" + imgageSize);
             } catch (IllegalStateException e) {
-                Log.w("startCapture","s="+imgageSize+"/"+e.getMessage());
+                Log.w("startCapture", "s=" + imgageSize + "/" + e.getMessage());
                 e.printStackTrace();
                 restartCapture();
             }
@@ -172,26 +160,29 @@ public class FloatWindowsService extends Service {
         if (image == null) {
             startScreenShot();
         } else {
-            SaveTask mSaveTask = new SaveTask();
+            mSaveTask = new SaveTask();
+            Log.w("startCapture", "new mSaveTask");
             AsyncTaskCompat.executeParallel(mSaveTask, image);
         }
     }
 
     private void restartCapture() {
+        Log.w("startCapture", "restartCapture");
         imgageSize = 8;
         handler1.removeCallbacks(csreenshotRunnable);
-        mImageReader.close();
-        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
-        handler1.postDelayed(csreenshotRunnable, 300);
+        //如果异步任务不为空 并且状态是 运行时  ，就把他取消这个加载任务
+        if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mSaveTask.cancel(true);
+        }
     }
 
-    public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
+    public class SaveTask extends AsyncTask<Image, Void, String> {
 
         @Override
-        protected Bitmap doInBackground(Image... params) {
-
+        protected String doInBackground(Image... params) {
+            Log.w("startCapture", "thread name:" + Thread.currentThread().getId());
             if (params == null || params.length < 1 || params[0] == null) {
-
+                Log.w("startCapture", "s=null");
                 return null;
             }
 
@@ -222,6 +213,7 @@ public class FloatWindowsService extends Service {
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 20, out);
                         out.flush();
                         out.close();
+//                        通知系统
                         Intent media = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                         Uri contentUri = Uri.fromFile(fileImage);
                         media.setData(contentUri);
@@ -236,28 +228,21 @@ public class FloatWindowsService extends Service {
                 }
             }
             if (fileImage != null) {
-                return bitmap;
+                return fileImage.toString();
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            Log.w("onPostExecute","s="+imgageSize);
+        protected void onPostExecute(String filename) {
+            super.onPostExecute(filename);
+            Log.w("startCapture", "onPostExecutes=" + imgageSize + "//bitmap==" + filename);
+            FileUtil.getString(filename,getApplicationContext());
             if (handler1 != null && imgageSize > 0) {
                 handler1.postDelayed(csreenshotRunnable, 300);
+            }else {
+                startScreenShot();
             }
-            //预览图片
-//      if (bitmap != null) {
-//
-//        ((ScreenCaptureApplication) getApplication()).setmScreenCaptureBitmap(bitmap);
-//        Log.e("ryze", "获取图片成功");
-//        startActivity(PreviewPictureActivity.newIntent(getApplicationContext()));
-//      }
-
-//            mFloatView.setVisibility(View.VISIBLE);
-
         }
     }
 
@@ -285,7 +270,11 @@ public class FloatWindowsService extends Service {
         stopVirtual();
 
         tearDownMediaProjection();
-    }
+        //如果异步任务不为空 并且状态是 运行时  ，就把他取消这个加载任务
+        if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mSaveTask.cancel(true);
 
+        }
+    }
 
 }

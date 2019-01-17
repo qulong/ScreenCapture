@@ -1,4 +1,4 @@
-package com.branch.www.screencapture;
+package com.demo.screencapture;
 
 import android.Manifest;
 import android.content.Context;
@@ -11,18 +11,22 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
 
 public class MainActivity extends FragmentActivity {
 
 
     public static final int REQUEST_MEDIA_PROJECTION = 18;
-
+    TextView picPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        picPath = findViewById(R.id.pic_path_url);
         //检查版本是否大于M
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             boolean hasPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
@@ -61,7 +65,7 @@ public class MainActivity extends FragmentActivity {
             showToast("该手机不支持");
             return;
         }
-
+        picPath.setText(FileUtil.getScreenShots(MainActivity.this));
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager)
                 getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         startActivityForResult(
@@ -77,10 +81,11 @@ public class MainActivity extends FragmentActivity {
             case REQUEST_MEDIA_PROJECTION:
 
                 if (resultCode == RESULT_OK && data != null) {
+//                    intentService = data;
                     FloatWindowsService.setResultData(data);
                     startService(new Intent(getApplicationContext(), FloatWindowsService.class));
                 }
-                finish();
+//                finish();
                 break;
         }
 
@@ -107,4 +112,5 @@ public class MainActivity extends FragmentActivity {
     private void showToast(String string) {
         Toast.makeText(MainActivity.this, string, Toast.LENGTH_LONG).show();
     }
+
 }
