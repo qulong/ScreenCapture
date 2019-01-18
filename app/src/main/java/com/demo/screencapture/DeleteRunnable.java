@@ -3,7 +3,6 @@ package com.demo.screencapture;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.TextureView;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -23,9 +22,9 @@ public class DeleteRunnable implements Runnable {
     private static final String TAG = DeleteRunnable.class.getSimpleName();
 
     /**
-     * @param dirPath  要删除文件所在的目录路径
-     * @param isPrefix true为前缀 false为后缀
-     * @param mRegEx   规则
+     * 删除文件所在的目录路径
+     * true为前缀 false为后缀
+     * mRegEx   规则
      */
     public DeleteRunnable(String dirPath, boolean isPrefix, long mRegEx) {
         this.mRegEx = mRegEx;
@@ -79,6 +78,9 @@ public class DeleteRunnable implements Runnable {
         public boolean accept(File file, String s) {
 //            return isPrefix ? s.startsWith(mRegEx) : s.endsWith(mRegEx);
             //这个只用后缀时间戳
+            if (TextUtils.isEmpty(s) || s.length() < 11) {
+                return false;
+            }
             String subTimes = s.substring(11, s.length() - 4);
             if (TextUtils.isEmpty(subTimes)) {
                 return false;
