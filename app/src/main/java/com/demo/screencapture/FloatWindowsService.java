@@ -28,6 +28,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * <p>
@@ -51,7 +53,9 @@ public class FloatWindowsService extends Service {
     Handler handler1 = new Handler();
     private int imgageSize = 8;
     Runnable csreenshotRunnable;
+    Runnable deleteFileRunnable;
     private SaveTask mSaveTask;
+    private WeakHashMap<Integer, List<String>> imgList;
 
     @Override
     public void onCreate() {
@@ -87,10 +91,23 @@ public class FloatWindowsService extends Service {
                 }
             };
         }
-
         handler1.postDelayed(csreenshotRunnable, 2000);
     }
 
+
+    private Runnable creatDeleteFileRunnable() {
+        if (deleteFileRunnable == null) {
+            deleteFileRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (FileUtil.isFileExists(getApplicationContext())) {
+                        DeleteUtils.delete(FileUtil.getScreenShots(getApplicationContext()), false, System.currentTimeMillis() - 3000);
+                    }
+                }
+            };
+        }
+        return deleteFileRunnable;
+    }
 
     private void createImageReader() {
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
@@ -174,6 +191,7 @@ public class FloatWindowsService extends Service {
         if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
             mSaveTask.cancel(true);
         }
+        handler1.postDelayed(creatDeleteFileRunnable(), 1000);
     }
 
     public class SaveTask extends AsyncTask<Image, Void, String> {
@@ -214,10 +232,10 @@ public class FloatWindowsService extends Service {
                         out.flush();
                         out.close();
 //                        通知系统
-                        Intent media = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                        Uri contentUri = Uri.fromFile(fileImage);
-                        media.setData(contentUri);
-                        sendBroadcast(media);
+//                        Intent media = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//                        Uri contentUri = Uri.fromFile(fileImage);
+//                        media.setData(contentUri);
+//                        sendBroadcast(media);
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -237,10 +255,10 @@ public class FloatWindowsService extends Service {
         protected void onPostExecute(String filename) {
             super.onPostExecute(filename);
             Log.w("startCapture", "onPostExecutes=" + imgageSize + "//bitmap==" + filename);
-            FileUtil.getString(filename,getApplicationContext());
+            FileUtil.getString(filename, getApplicationContext());
             if (handler1 != null && imgageSize > 0) {
                 handler1.postDelayed(csreenshotRunnable, 300);
-            }else {
+            } else {
                 startScreenShot();
             }
         }
@@ -268,12 +286,18 @@ public class FloatWindowsService extends Service {
         super.onDestroy();
 
         stopVirtual();
-
         tearDownMediaProjection();
         //如果异步任务不为空 并且状态是 运行时  ，就把他取消这个加载任务
         if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
             mSaveTask.cancel(true);
-
+        }
+        if (handler1 != null) {
+            if (csreenshotRunnable != null) {
+                handler1.removeCallbacks(csreenshotRunnable);
+            }
+            if (deleteFileRunnable != null) {
+                handler1.removeCallbacks(deleteFileRunnable);
+            }
         }
     }
 

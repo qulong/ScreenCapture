@@ -44,21 +44,34 @@ public class FileUtil {
         if (!file.exists()) {
             file.mkdirs();
         }
-        Log.e("pic--path", stringBuffer.toString());
+//        Log.e("pic--path", stringBuffer.toString());
         return stringBuffer.toString();
+
+    }
+    public static boolean isFileExists(Context context) {
+
+        StringBuffer stringBuffer = new StringBuffer(getAppPath(context));
+        stringBuffer.append(File.separator);
+
+        stringBuffer.append(SCREENCAPTURE_PATH);
+
+        File file = new File(stringBuffer.toString());
+
+        if (file.exists()) {
+            return true;
+        }
+        return false;
 
     }
 
     public static String getScreenShotsName(Context context) {
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
-
-        String date = simpleDateFormat.format(new Date()) + SystemClock.currentThreadTimeMillis();
-
+//        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+//        String date = simpleDateFormat.format(new Date()) + SystemClock.currentThreadTimeMillis();
         StringBuffer stringBuffer = new StringBuffer(getScreenShots(context));
         stringBuffer.append(SCREENSHOT_NAME);
         stringBuffer.append("_");
-        stringBuffer.append(date);
+        stringBuffer.append(System.currentTimeMillis());
         stringBuffer.append(".png");
 
         return stringBuffer.toString();
