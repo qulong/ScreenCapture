@@ -13,15 +13,15 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.os.AsyncTaskCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
+
+import com.demo.screencapture.utils.FileUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -60,9 +60,6 @@ public class FloatWindowsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-//    createFloatView();
-
         createImageReader();
         startScreenShot();
     }
@@ -179,7 +176,8 @@ public class FloatWindowsService extends Service {
         } else {
             mSaveTask = new SaveTask();
             Log.w("startCapture", "new mSaveTask");
-            AsyncTaskCompat.executeParallel(mSaveTask, image);
+//            AsyncTaskCompat.executeParallel(mSaveTask, image);
+            mSaveTask.execute(image);
         }
     }
 

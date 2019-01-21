@@ -18,4 +18,11 @@ public class DeleteUtils {
     public static void delete(String dirPath, boolean isPrefix, long regEx) {
         executor.execute(new DeleteRunnable(dirPath, isPrefix, regEx));
     }
+
+    public static void addRunnable(Runnable runnable) {
+        if (runnable == null) {
+            return;
+        }
+        executor.execute(runnable);
+    }
 }

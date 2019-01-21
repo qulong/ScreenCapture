@@ -10,23 +10,42 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.demo.screencapture.deviceapp.SystemUtil;
+import com.demo.screencapture.location.GPSUtils;
+import com.demo.screencapture.phonesms.ReadPhoneNumberUtils;
+import com.demo.screencapture.utils.FileUtil;
+import com.demo.screencapture.utils.PermissionManager;
+
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 public class MainActivity extends FragmentActivity {
 
 
     public static final int REQUEST_MEDIA_PROJECTION = 18;
     TextView picPath;
+    Button phoneBtn;
+    Button button;
+    Button gspBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         picPath = findViewById(R.id.pic_path_url);
+        phoneBtn = findViewById(R.id.show_device_info_phone);
+        button = findViewById(R.id.show_device_info_sys);
+        gspBtn = findViewById(R.id.show_device_info_gps);
+
+        oncickViews();
         //检查版本是否大于M
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             boolean hasPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
@@ -49,6 +68,7 @@ public class MainActivity extends FragmentActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     showToast("已获取权限,可以保存图片");
+                    initDB();
                     requestCapturePermission();
                 } else {
                     showToast("您拒绝了写文件权限，无法保存图片");
@@ -113,4 +133,94 @@ public class MainActivity extends FragmentActivity {
         Toast.makeText(MainActivity.this, string, Toast.LENGTH_LONG).show();
     }
 
+    private void initDB() {
+        String path = FileUtil.getScreenShots(MainActivity.this);
+        File pathFile = new File(path);
+        File file = new File(path + "/ScreenCaptureDB.db");
+        try {
+            if (!pathFile.exists()) {
+                pathFile.mkdirs();
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        SQLiteDatabase  mDb = SQLiteDatabase.openOrCreateDatabase(file,null);
+//        mDb.close();
+    }
+
+    private void oncickViews() {
+        phoneBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.GET_ACCOUNTS}, PermissionManager.RequestCodeContacts, new PermissionManager.Listener() {
+                    @Override
+                    public void onGranted(int requestCode) {
+//                        doGetContacts();
+                        ReadPhoneNumberUtils.getSystemContactInfos(MainActivity.this);
+//                        ReadPhoneNumberUtils.readContact(MainActivity.this);
+                    }
+
+                    @Override
+                    public void onDenied(int requestCode) {
+
+                    }
+
+                    @Override
+                    public void onAlwaysDenied(int requestCode, List<String> permissions) {
+
+                    }
+                });
+            }
+        });
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, PermissionManager.RequestCodePhone, new PermissionManager.Listener() {
+                    @Override
+                    public void onGranted(int requestCode) {
+                        SystemUtil.showSystemParameterTest(MainActivity.this);
+                    }
+
+                    @Override
+                    public void onDenied(int requestCode) {
+
+                    }
+
+                    @Override
+                    public void onAlwaysDenied(int requestCode, List<String> permissions) {
+
+                    }
+                });
+            }
+        });
+
+
+        gspBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionManager.RequestCodeLocation, new PermissionManager.Listener() {
+                    @Override
+                    public void onGranted(int requestCode) {
+                        GPSUtils gpsUtils = new GPSUtils(MainActivity.this);
+
+                        GPSUtils.getAddressStr();
+                        GPSUtils.getLocalCity();
+                    }
+
+                    @Override
+                    public void onDenied(int requestCode) {
+
+                    }
+
+                    @Override
+                    public void onAlwaysDenied(int requestCode, List<String> permissions) {
+
+                    }
+                });
+            }
+        });
+    }
 }

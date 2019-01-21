@@ -1,4 +1,4 @@
-package com.demo.screencapture;
+package com.demo.screencapture.utils;
 
 import android.content.Context;
 import android.os.Environment;
@@ -14,31 +14,22 @@ public class FileUtil {
 
     //系统保存截图的路径
     public static final String SCREENCAPTURE_PATH = "ScreenCapture" + File.separator + "Screenshots" + File.separator;
-
     public static final String SCREENSHOT_NAME = "Screenshot";
 
     public static String getAppPath(Context context) {
 
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-
-
             return Environment.getExternalStorageDirectory().toString();
-
         } else {
-
             return context.getFilesDir().toString();
         }
-
     }
-
 
     public static String getScreenShots(Context context) {
 
         StringBuffer stringBuffer = new StringBuffer(getAppPath(context));
         stringBuffer.append(File.separator);
-
         stringBuffer.append(SCREENCAPTURE_PATH);
-
         File file = new File(stringBuffer.toString());
 
         if (!file.exists()) {
@@ -46,22 +37,18 @@ public class FileUtil {
         }
 //        Log.e("pic--path", stringBuffer.toString());
         return stringBuffer.toString();
-
     }
+
     public static boolean isFileExists(Context context) {
 
         StringBuffer stringBuffer = new StringBuffer(getAppPath(context));
         stringBuffer.append(File.separator);
-
         stringBuffer.append(SCREENCAPTURE_PATH);
-
         File file = new File(stringBuffer.toString());
-
         if (file.exists()) {
             return true;
         }
         return false;
-
     }
 
     public static String getScreenShotsName(Context context) {
@@ -73,14 +60,13 @@ public class FileUtil {
         stringBuffer.append("_");
         stringBuffer.append(System.currentTimeMillis());
         stringBuffer.append(".png");
-
         return stringBuffer.toString();
 
     }
 
-    public static void getString(String str,Context cx) {
+    public static void getString(String str, Context cx) {
 
-        String filePath = getScreenShots(cx)+ File.separator +"pictureName.txt";
+        String filePath = getScreenShots(cx) + File.separator + "pictureName.txt";
         try {
             File file = new File(filePath);
             if (!file.exists()) {
@@ -93,11 +79,27 @@ public class FileUtil {
             outStream.write(str.getBytes());
             outStream.close();
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
+    }
 
+    public static void addString_Txt(Context cx,String str, String txtName) {
+
+        String filePath = getScreenShots(cx) + File.separator + txtName+".txt";
+        try {
+            File file = new File(filePath);
+            if (!file.exists()) {
+                File dir = new File(file.getParent());
+                dir.mkdirs();
+                file.createNewFile();
+            }
+
+            FileOutputStream outStream = new FileOutputStream(file);
+            outStream.write(str.getBytes());
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
