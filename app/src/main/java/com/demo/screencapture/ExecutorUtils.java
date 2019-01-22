@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
  * Date:2019/1/18
  */
 
-public class DeleteUtils {
+public class ExecutorUtils {
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     //删除指定目录指定前后缀的文件

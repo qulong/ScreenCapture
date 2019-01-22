@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.demo.screencapture.utils.FileUtil;
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +66,8 @@ public class ApplicationUtil {
 //            app.setChecked(false);
             System.out.println(label + "/" + pkgName + "/" + activityName);
         }
+        Gson gson=new Gson();
+        FileUtil.addString_Txt(context,gson.toJson(apps),FileUtil.deviceInstallAppFileName);
         return apps;
     }
 

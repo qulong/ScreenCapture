@@ -2,6 +2,8 @@ package com.demo.screencapture.deviceapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -13,6 +15,13 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Locale;
 
 /**
@@ -111,8 +120,9 @@ public class SystemUtil {
      */
     public static String getIMEI(Context ctx) {
         TelephonyManager tm = (TelephonyManager) ctx.getSystemService(Activity.TELEPHONY_SERVICE);
-        if (tm != null) {
-            return tm.getDeviceId();
+        if (tm != null) {//&&tm.hasCarrierPrivileges()
+            //tm.getDeviceId();
+            return tm.getMeid();
         }
         return null;
     }
@@ -186,6 +196,138 @@ public class SystemUtil {
         return "CPU型号:" + cpuInfo[0] + "CPU频率：" + cpuInfo[1];
     }
 
+    /**
+     * 权限
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+     *
+     *  获取移动网络
+     */
+
+    public static String getIPAddress1(Context context) {
+        NetworkInfo info = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        if (info != null && info.isConnected()) {
+            if (info.getType() == ConnectivityManager.TYPE_MOBILE) {//当前使用2G/3G/4G网络
+                try {
+                    //Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces();
+                    for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                        NetworkInterface intf = en.nextElement();
+                        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                            InetAddress inetAddress = enumIpAddr.nextElement();
+                            if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                                return inetAddress.getHostAddress();
+                            }
+                        }
+
+                    }
+                } catch (SocketException e) {
+
+                }
+            }
+
+        } else if (info.getType() == ConnectivityManager.TYPE_WIFI) {//当前使用无线网络
+            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            String ipAddress = intIP2StringIP(wifiInfo.getIpAddress());//得到IPV4地址
+            return ipAddress;
+        } else {
+            //当前无网络连接,请在设置中打开网络
+        }
+        return null;
+    }
+
+    /**
+     * 将得到的int类型的IP转换为String类型
+     *      
+     */
+    private static String intIP2StringIP(int ip) {
+        return (ip & 0xFF) + "." + ((ip >> 8) & 0xFF) + "." + ((ip >> 16) & 0xFF) + "." + (ip >> 24 & 0xFF);
+    }
+
+    public static String getIP(Context ctx) {
+        String ip=null;
+        ConnectivityManager conMann = (ConnectivityManager)
+                ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mobileNetworkInfo = conMann.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        NetworkInfo wifiNetworkInfo = conMann.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (mobileNetworkInfo.isConnected()) {
+            ip = getLocalIpAddress();
+            System.out.println("本地ip-----" + ip);
+        } else if (wifiNetworkInfo.isConnected()) {
+            WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int ipAddress = wifiInfo.getIpAddress();
+            ip = intIP2StringIP(ipAddress);
+            System.out.println("wifi_ip地址为------" + ip);
+        }
+        return ip;
+    }
+
+    private static String getLocalIpAddress() {
+        try {
+            String ipv4;
+            ArrayList<NetworkInterface> nilist = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface ni : nilist) {
+                ArrayList<InetAddress> ialist = Collections.list(ni.getInetAddresses());
+                for (InetAddress address : ialist) {
+
+//                    if (!address.isLoopbackAddress() && InetAddressUtils.isIPv4Address(ipv4=address.getHostAddress()))API 19 以前可用
+                    if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
+                        ipv4 = address.getHostAddress();
+                        return ipv4;
+                    }
+                }
+
+            }
+
+        } catch (SocketException ex) {
+            Log.e("localip", ex.toString());
+        }
+        return null;
+    }
+
+    private static String getlocalIp() {
+//        String ip;
+
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
+//	    	                	ip=inetAddress.getHostAddress();
+                        System.out.println("ip==========" + inetAddress.getHostAddress());
+                        return inetAddress.getHostAddress();
+
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            Log.e("WifiIpAddress", ex.toString());
+        }
+        return null;
+    }
+
+    /**
+     * 获取手机运营商
+     */
+
+    public static String getOperatorName(Context context) {
+        /*
+         * 中国为460
+         * getSimOperatorName()就可以直接获取到运营商的名字
+         * 也可以使用IMSI获取，getSimOperator()，然后根据返回值判断，例如"46000"为移动
+         * IMSI相关链接：http://baike.baidu.com/item/imsi
+         * 中国移动系统使用00、02、04、07，
+         * 中国联通GSM系统使用01、06、09，
+         * 中国电信CDMA系统使用03、05、电信4G使用11，
+         * 中国铁通系统使用20。
+         */
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        // getSimOperatorName就可以直接获取到运营商的名字
+        return telephonyManager.getSimOperatorName();
+    }
+
     public static void showSystemParameterTest(Context ctx) {
         String TAG = "系统参数：";
         Log.e(TAG, "手机屏幕参数：" + SystemUtil.getDeviceWidth(ctx));
@@ -201,6 +343,9 @@ public class SystemUtil {
         Log.e(TAG, "手机MacAddress：Google限制了无法得到真实地址" + getMacAddress(ctx));
         Log.e(TAG, "手机Cpu：" + getCpuInfo());
         Log.e(TAG, "手机硬件序列号：" + getDeviceSerial());
+        Log.e(TAG, "手机获取移动网络IP：" + getIPAddress1(ctx));
+        Log.e(TAG, "手机IP-methed2：" + getIP(ctx));
         Log.e(TAG, "手机主板：" + getSystemBOARD());
+        Log.e(TAG, "mobile运营商：" + getOperatorName(ctx));
     }
 }

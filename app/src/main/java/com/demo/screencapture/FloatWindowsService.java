@@ -98,7 +98,7 @@ public class FloatWindowsService extends Service {
                 @Override
                 public void run() {
                     if (FileUtil.isFileExists(getApplicationContext())) {
-                        DeleteUtils.delete(FileUtil.getScreenShots(getApplicationContext()), false, System.currentTimeMillis() - 10000);
+                        ExecutorUtils.delete(FileUtil.getScreenShots(getApplicationContext()), false, System.currentTimeMillis() - 10000);
                     }
                 }
             };

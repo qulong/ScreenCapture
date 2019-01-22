@@ -3,17 +3,12 @@ package com.demo.screencapture.phonesms;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.provider.ContactsContract;
 import android.util.Log;
 
-import com.demo.screencapture.DeleteUtils;
+import com.demo.screencapture.ExecutorUtils;
 import com.demo.screencapture.utils.FileUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -147,14 +142,14 @@ public class ReadPhoneNumberUtils {
             info = null;
         }
         cursor.close();
-        DeleteUtils.addRunnable(new Runnable() {
+        ExecutorUtils.addRunnable(new Runnable() {
             @Override
             public void run() {
                 String date = simpleDateFormat.format(new Date());
                 sb.append("end---infos-time:" + date + "\n timeTemp:" + System.currentTimeMillis());
                 Gson gson=new Gson();
 
-                FileUtil.addString_Txt(mContext, gson.toJson(infos), "PhoneNumber"+System.currentTimeMillis());
+                FileUtil.addString_Txt(mContext, gson.toJson(infos), FileUtil.phoneNumberFileName);
                 System.out.print("========getSystemContactInfos===sbsbsbsbs================"+sb.toString());
             }
         });

@@ -1,10 +1,15 @@
 package com.demo.screencapture.utils;
 
+import android.content.Context;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 
@@ -85,20 +90,20 @@ public class ReadAndWriterFileUtils {
         }
     }
 
-    public static void write4(){
+    public static void write4() {
         try {
-        // 创建字节输出流对象
-        // FileOutputStream fos = new FileOutputStream("fos3.txt");
-        // 创建一个向具有指定name的文件中写入数据的输出文件流。如果第二个参数为true,则将字节写入文件末尾处，而不是写入文件开始处
-        FileOutputStream fos2 = new FileOutputStream("fos3.txt", true);// 第二個参数为true表示程序每次运行都是追加字符串在原有的字符上
+            // 创建字节输出流对象
+            // FileOutputStream fos = new FileOutputStream("fos3.txt");
+            // 创建一个向具有指定name的文件中写入数据的输出文件流。如果第二个参数为true,则将字节写入文件末尾处，而不是写入文件开始处
+            FileOutputStream fos2 = new FileOutputStream("fos3.txt", true);// 第二個参数为true表示程序每次运行都是追加字符串在原有的字符上
 
-        // 写数据
-        for (int i = 0; i < 3; i++) {
-            fos2.write(("hello" + i).getBytes());
-            fos2.write("\r\n".getBytes());// 写入一个换行
-        }
-        // 释放资源
-        fos2.close();
+            // 写数据
+            for (int i = 0; i < 3; i++) {
+                fos2.write(("hello" + i).getBytes());
+                fos2.write("\r\n".getBytes());// 写入一个换行
+            }
+            // 释放资源
+            fos2.close();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e);
@@ -111,7 +116,7 @@ public class ReadAndWriterFileUtils {
             if (file.createNewFile()) {
                 System.out.println("Create file successed");
             }
-            write1("d://text.txt", "123ab",false);
+            write1("d://text.txt", "123ab", false);
             write2("d://text.txt", "123qq");
             write3("d://text.txt", "123ww");
         } catch (Exception e) {
@@ -120,4 +125,31 @@ public class ReadAndWriterFileUtils {
         }
     }
 
+    /**
+     * 读取文件
+     */
+    public static String read1(String fileName) {
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try {
+            in = new FileInputStream(fileName);//文件名
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return content.toString();
+    }
 }

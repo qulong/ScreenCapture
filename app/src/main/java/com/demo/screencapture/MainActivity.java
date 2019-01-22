@@ -10,18 +10,21 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.demo.screencapture.deviceapp.ApplicationUtil;
+import com.demo.screencapture.deviceapp.CheckAppInstalledUtil;
 import com.demo.screencapture.deviceapp.SystemUtil;
 import com.demo.screencapture.location.GPSUtils;
 import com.demo.screencapture.phonesms.ReadPhoneNumberUtils;
 import com.demo.screencapture.utils.FileUtil;
 import com.demo.screencapture.utils.PermissionManager;
+import com.demo.screencapture.utils.ReadAndWriterFileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,9 +35,11 @@ public class MainActivity extends FragmentActivity {
 
     public static final int REQUEST_MEDIA_PROJECTION = 18;
     TextView picPath;
+    Button readPhoneNumberBtn;
     Button phoneBtn;
     Button button;
     Button gspBtn;
+    Button installApp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +47,10 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         picPath = findViewById(R.id.pic_path_url);
         phoneBtn = findViewById(R.id.show_device_info_phone);
+        readPhoneNumberBtn = findViewById(R.id.show_device_info_read_phone);
         button = findViewById(R.id.show_device_info_sys);
         gspBtn = findViewById(R.id.show_device_info_gps);
+        installApp = findViewById(R.id.show_device_info_install_app);
 
         oncickViews();
         //检查版本是否大于M
@@ -136,7 +143,7 @@ public class MainActivity extends FragmentActivity {
     private void initDB() {
         String path = FileUtil.getScreenShots(MainActivity.this);
         File pathFile = new File(path);
-        File file = new File(path + "/ScreenCaptureDB.db");
+        File file = new File(path + File.separator + FileUtil.screenCaptureDB);
         try {
             if (!pathFile.exists()) {
                 pathFile.mkdirs();
@@ -171,6 +178,19 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     public void onAlwaysDenied(int requestCode, List<String> permissions) {
 
+                    }
+                });
+            }
+        });
+        readPhoneNumberBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ExecutorUtils.addRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        String json = ReadAndWriterFileUtils.read1(FileUtil.getScreenShots(MainActivity.this) + File.separator + FileUtil.phoneNumberFileName);
+                        System.out.print(json);
+                        Log.e("MMMMM", json);
                     }
                 });
             }
@@ -220,6 +240,18 @@ public class MainActivity extends FragmentActivity {
 
                     }
                 });
+            }
+        });
+        installApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               ExecutorUtils.addRunnable(new Runnable() {
+                   @Override
+                   public void run() {
+                       ApplicationUtil util=ApplicationUtil.newInstance(MainActivity.this);
+                       util.loadAllApp();
+                   }
+               });
             }
         });
     }
