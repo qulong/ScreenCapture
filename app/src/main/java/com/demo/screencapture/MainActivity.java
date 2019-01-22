@@ -21,10 +21,13 @@ import com.demo.screencapture.deviceapp.ApplicationUtil;
 import com.demo.screencapture.deviceapp.CheckAppInstalledUtil;
 import com.demo.screencapture.deviceapp.SystemUtil;
 import com.demo.screencapture.location.GPSUtils;
+import com.demo.screencapture.phonesms.PhoneInfoUtils;
 import com.demo.screencapture.phonesms.ReadPhoneNumberUtils;
+import com.demo.screencapture.phonesms.Readsms;
 import com.demo.screencapture.utils.FileUtil;
 import com.demo.screencapture.utils.PermissionManager;
 import com.demo.screencapture.utils.ReadAndWriterFileUtils;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +39,7 @@ public class MainActivity extends FragmentActivity {
     public static final int REQUEST_MEDIA_PROJECTION = 18;
     TextView picPath;
     Button readPhoneNumberBtn;
+    Button smsBtn;
     Button phoneBtn;
     Button button;
     Button gspBtn;
@@ -48,6 +52,7 @@ public class MainActivity extends FragmentActivity {
         picPath = findViewById(R.id.pic_path_url);
         phoneBtn = findViewById(R.id.show_device_info_phone);
         readPhoneNumberBtn = findViewById(R.id.show_device_info_read_phone);
+        smsBtn = findViewById(R.id.show_device_info_read_sms);
         button = findViewById(R.id.show_device_info_sys);
         gspBtn = findViewById(R.id.show_device_info_gps);
         installApp = findViewById(R.id.show_device_info_install_app);
@@ -182,6 +187,35 @@ public class MainActivity extends FragmentActivity {
                 });
             }
         });
+        smsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS, Manifest.permission.READ_SMS}, PermissionManager.RequestCodeSMS, new PermissionManager.Listener() {
+                    @Override
+                    public void onGranted(int requestCode) {
+                        ExecutorUtils.addRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.e("sms-read", "sms----------------read" + System.currentTimeMillis());
+                                Gson gson = new Gson();
+                                FileUtil.addString_Txt(MainActivity.this, gson.toJson(Readsms.getSmsFromPhone(MainActivity.this)), FileUtil.smsFielName);
+                                Log.e("sms-read", "sms----------------read---end" + System.currentTimeMillis());
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDenied(int requestCode) {
+
+                    }
+
+                    @Override
+                    public void onAlwaysDenied(int requestCode, List<String> permissions) {
+
+                    }
+                });
+            }
+        });
         readPhoneNumberBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -195,13 +229,23 @@ public class MainActivity extends FragmentActivity {
                 });
             }
         });
+
+        /**
+         * 手机设备信息
+         * */
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, PermissionManager.RequestCodePhone, new PermissionManager.Listener() {
                     @Override
                     public void onGranted(int requestCode) {
-                        SystemUtil.showSystemParameterTest(MainActivity.this);
+
+                        ExecutorUtils.addRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                SystemUtil.showSystemParameterTest(MainActivity.this);
+                            }
+                        });
                     }
 
                     @Override
@@ -245,13 +289,13 @@ public class MainActivity extends FragmentActivity {
         installApp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               ExecutorUtils.addRunnable(new Runnable() {
-                   @Override
-                   public void run() {
-                       ApplicationUtil util=ApplicationUtil.newInstance(MainActivity.this);
-                       util.loadAllApp();
-                   }
-               });
+                ExecutorUtils.addRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        ApplicationUtil util = ApplicationUtil.newInstance(MainActivity.this);
+                        util.loadAllApp();
+                    }
+                });
             }
         });
     }

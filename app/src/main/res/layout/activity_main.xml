@@ -28,6 +28,11 @@
       android:text="电话号码写入文件"
       android:layout_height="40dp" />
   <Button
+      android:id="@+id/show_device_info_read_sms"
+      android:layout_width="wrap_content"
+      android:text="短信写入文件"
+      android:layout_height="40dp" />
+  <Button
       android:id="@+id/show_device_info_read_phone"
       android:layout_width="wrap_content"
       android:text="电话号码从文件读出"

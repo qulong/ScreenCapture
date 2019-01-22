@@ -64,7 +64,7 @@ public class ApplicationUtil {
 //            app.setPackageName(pkgName);
 //            app.setIntent(intent);
 //            app.setChecked(false);
-            System.out.println(label + "/" + pkgName + "/" + activityName);
+//            System.out.println(label + "/" + pkgName + "/" + activityName);
         }
         Gson gson=new Gson();
         FileUtil.addString_Txt(context,gson.toJson(apps),FileUtil.deviceInstallAppFileName);

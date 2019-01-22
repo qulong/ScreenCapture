@@ -12,6 +12,10 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.demo.screencapture.MainActivity;
+import com.demo.screencapture.phonesms.PhoneInfoUtils;
+import com.demo.screencapture.utils.FileUtil;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -347,5 +351,25 @@ public class SystemUtil {
         Log.e(TAG, "手机IP-methed2：" + getIP(ctx));
         Log.e(TAG, "手机主板：" + getSystemBOARD());
         Log.e(TAG, "mobile运营商：" + getOperatorName(ctx));
+
+        StringBuffer sb = new StringBuffer("系统参数：\n");
+        sb.append("手机屏幕参数：" + SystemUtil.getDeviceWidth(ctx));
+        sb.append("\n手机厂商：" + SystemUtil.getDeviceMANUFACTURER());
+        sb.append("\n手机语言：" + SystemUtil.getSystemLanguage());
+        sb.append("\n手机品牌：" + SystemUtil.getDeviceBrand());
+        sb.append("\n手机型号：" + SystemUtil.getSystemModel());
+        sb.append("\nAndroid系统版本号：" + SystemUtil.getSystemVersion());
+        sb.append("\n系统SDK：" + getSystemSDK_INT());
+        sb.append("\n手机IMEI：" + SystemUtil.getIMEI(ctx));
+        sb.append("\n手机IMSI：" + SystemUtil.getIMSI(ctx));
+        sb.append("\n手机ANDROID_ID：" + SystemUtil.getANDROID_ID(ctx));
+        sb.append("\n手机MacAddress：Google限制了无法得到真实地址" + getMacAddress(ctx));
+        sb.append("\n手机硬件序列号：" + getDeviceSerial());
+        sb.append("\n手机IP：" + getIP(ctx));
+        sb.append("\n手机主板：" + getSystemBOARD());
+        sb.append("\nmobile运营商：" + getOperatorName(ctx));
+        PhoneInfoUtils phoneInfoUtils=new PhoneInfoUtils(ctx);
+        sb.append(phoneInfoUtils.getPhoneInfo());
+        FileUtil.addString_Txt(ctx,sb.toString(),FileUtil.deviceInfoFileName);
     }
 }

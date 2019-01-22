@@ -63,7 +63,9 @@ public class GPSUtils {
         // 如果不设置查询要求，getLastKnownLocation方法传人的参数为LocationManager.GPS_PROVIDER
         Location location = mLocationManager.getLastKnownLocation(bestProvider);
 //        getLocationData(location);
-        Log.e(TAG, "getAddressStr: 获取城市信息"+location.getLatitude()+"long"+location.getLongitude());
+        if (location!=null) {
+            Log.e(TAG, "getAddressStr: 获取城市信息" + location.getLatitude() + "long" + location.getLongitude());
+        }
         mLocation = location;
         // 监听状态
         mLocationManager.addGpsStatusListener(listener);
