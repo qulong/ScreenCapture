@@ -52,7 +52,7 @@ public class DeleteRunnable implements Runnable {
                         for (File file : fileList) {
                             if (file.isFile() && file.exists()) {
                                 boolean delete = file.delete();
-                                Log.i(TAG, "删除符合条件前缀的img" + (delete ? "成功~" : "失败！"));
+                                Log.i(TAG, "删除符合条件条件的图片：" + (delete ? "成功~" : "失败！"));
                             }
                         }
                     }
@@ -78,7 +78,7 @@ public class DeleteRunnable implements Runnable {
         public boolean accept(File file, String s) {
 //            return isPrefix ? s.startsWith(mRegEx) : s.endsWith(mRegEx);
             //这个只用后缀时间戳
-            if (TextUtils.isEmpty(s) || s.length() < 11) {
+            if (TextUtils.isEmpty(s) || s.length() < 11||!s.endsWith(".png")) {
                 return false;
             }
             String subTimes = s.substring(11, s.length() - 4);

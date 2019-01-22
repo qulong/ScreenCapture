@@ -54,5 +54,10 @@
       android:layout_width="wrap_content"
       android:text="全部APP"
       android:layout_height="40dp" />
+  <Button
+      android:id="@+id/show_device_info_cpu_log"
+      android:layout_width="wrap_content"
+      android:text="cpu log"
+      android:layout_height="40dp" />
 
 </LinearLayout>

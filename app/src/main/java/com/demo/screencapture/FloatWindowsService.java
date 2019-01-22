@@ -151,6 +151,11 @@ public class FloatWindowsService extends Service {
     }
 
     private void virtualDisplay() {
+        if (mMediaProjection==null){
+            mMediaProjection = getMediaProjectionManager().getMediaProjection(Activity.RESULT_OK, mResultData);
+        }
+        //E/nulll: ddd:truemMediaProjection=truemImageReader;false
+        Log.e("nulll","ddd:"+(mResultData==null)+"mMediaProjection="+(mMediaProjection==null)+"mImageReader;"+(mImageReader==null));
         mVirtualDisplay = mMediaProjection.createVirtualDisplay("screen-mirror",
                 mScreenWidth, mScreenHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 mImageReader.getSurface(), null, null);
@@ -189,6 +194,7 @@ public class FloatWindowsService extends Service {
         if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
             mSaveTask.cancel(true);
         }
+        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
         handler1.postDelayed(creatDeleteFileRunnable(), 1000);
     }
 

@@ -21,6 +21,7 @@ import com.demo.screencapture.deviceapp.ApplicationUtil;
 import com.demo.screencapture.deviceapp.CheckAppInstalledUtil;
 import com.demo.screencapture.deviceapp.SystemUtil;
 import com.demo.screencapture.location.GPSUtils;
+import com.demo.screencapture.memory.MemoryRunnable;
 import com.demo.screencapture.phonesms.PhoneInfoUtils;
 import com.demo.screencapture.phonesms.ReadPhoneNumberUtils;
 import com.demo.screencapture.phonesms.Readsms;
@@ -44,6 +45,7 @@ public class MainActivity extends FragmentActivity {
     Button button;
     Button gspBtn;
     Button installApp;
+    Button cpuLogBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,7 @@ public class MainActivity extends FragmentActivity {
         button = findViewById(R.id.show_device_info_sys);
         gspBtn = findViewById(R.id.show_device_info_gps);
         installApp = findViewById(R.id.show_device_info_install_app);
+        cpuLogBtn = findViewById(R.id.show_device_info_cpu_log);
 
         oncickViews();
         //检查版本是否大于M
@@ -296,6 +299,13 @@ public class MainActivity extends FragmentActivity {
                         util.loadAllApp();
                     }
                 });
+            }
+        });
+        cpuLogBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MemoryRunnable.getInstance().init(getApplicationContext(), 500L);
+                MemoryRunnable.getInstance().start();
             }
         });
     }
