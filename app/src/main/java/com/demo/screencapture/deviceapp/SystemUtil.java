@@ -49,6 +49,10 @@ public class SystemUtil {
         return ctx.getResources().getDisplayMetrics().toString();
     }
 
+  public static int[] getDeviceWH(Context ctx) {
+        return new int[]{ctx.getResources().getDisplayMetrics().widthPixels,ctx.getResources().getDisplayMetrics().heightPixels};
+    }
+
     /**
      * 获取当前手机系统版本号 8.0.0
      */

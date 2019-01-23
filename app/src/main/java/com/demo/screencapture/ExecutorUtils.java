@@ -12,7 +12,8 @@ import java.util.concurrent.Executors;
  */
 
 public class ExecutorUtils {
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+//    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
 
     //删除指定目录指定前后缀的文件
     public static void delete(String dirPath, boolean isPrefix, long regEx) {

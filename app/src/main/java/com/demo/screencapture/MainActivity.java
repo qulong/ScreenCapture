@@ -18,11 +18,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.demo.screencapture.deviceapp.ApplicationUtil;
-import com.demo.screencapture.deviceapp.CheckAppInstalledUtil;
 import com.demo.screencapture.deviceapp.SystemUtil;
 import com.demo.screencapture.location.GPSUtils;
 import com.demo.screencapture.memory.MemoryRunnable;
-import com.demo.screencapture.phonesms.PhoneInfoUtils;
 import com.demo.screencapture.phonesms.ReadPhoneNumberUtils;
 import com.demo.screencapture.phonesms.Readsms;
 import com.demo.screencapture.utils.FileUtil;
@@ -31,6 +29,8 @@ import com.demo.screencapture.utils.ReadAndWriterFileUtils;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -166,6 +166,7 @@ public class MainActivity extends FragmentActivity {
 //        mDb.close();
     }
 
+
     private void oncickViews() {
         phoneBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -299,6 +300,7 @@ public class MainActivity extends FragmentActivity {
                         util.loadAllApp();
                     }
                 });
+
             }
         });
         cpuLogBtn.setOnClickListener(new View.OnClickListener() {

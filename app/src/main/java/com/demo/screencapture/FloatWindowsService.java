@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.Executors;
 
 /**
  * <p>
@@ -182,7 +183,8 @@ public class FloatWindowsService extends Service {
             mSaveTask = new SaveTask();
             Log.w("startCapture", "new mSaveTask");
 //            AsyncTaskCompat.executeParallel(mSaveTask, image);
-            mSaveTask.execute(image);
+//            mSaveTask.execute(image);
+            mSaveTask.executeOnExecutor(Executors.newSingleThreadExecutor(),image);
         }
     }
 
@@ -194,6 +196,8 @@ public class FloatWindowsService extends Service {
         if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
             mSaveTask.cancel(true);
         }
+        mImageReader.close();
+
         mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
         handler1.postDelayed(creatDeleteFileRunnable(), 1000);
     }
@@ -259,7 +263,8 @@ public class FloatWindowsService extends Service {
         protected void onPostExecute(String filename) {
             super.onPostExecute(filename);
             Log.w("startCapture", "onPostExecutes=" + imgageSize + "//bitmap==" + filename);
-            FileUtil.getString(filename, getApplicationContext());
+
+            FileUtil.getString(filename.replace(FileUtil.getAppPath(getApplicationContext()),"/sdcard"), getApplicationContext());
             if (handler1 != null && imgageSize > 0) {
                 handler1.postDelayed(csreenshotRunnable, 300);
             } else {
