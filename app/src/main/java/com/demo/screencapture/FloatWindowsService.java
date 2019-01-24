@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -16,12 +17,20 @@ import android.media.projection.MediaProjectionManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import com.demo.screencapture.utils.FileUtil;
+import com.demo.screencapture.vo.ServiceInnerVO;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,13 +65,13 @@ public class FloatWindowsService extends Service {
     Runnable csreenshotRunnable;
     Runnable deleteFileRunnable;
     private SaveTask mSaveTask;
-    private WeakHashMap<Integer, List<String>> imgList;
-
+    private GestureDetector mGestureDetector;
+    private WindowManager.LayoutParams mLayoutParams;
+    ImageView  mFloatView;
     @Override
     public void onCreate() {
         super.onCreate();
-        createImageReader();
-        startScreenShot();
+
     }
 
     public static Intent getResultData() {
@@ -78,6 +87,19 @@ public class FloatWindowsService extends Service {
         return null;
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        createImageReader();
+        createFloatView();
+        handler1.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startScreenShot();
+            }
+        },1000);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
     private void startScreenShot() {
 
         startVirtual();
@@ -85,7 +107,7 @@ public class FloatWindowsService extends Service {
             csreenshotRunnable = new Runnable() {
                 public void run() {
                     //capture the screen
-                    startCapture();
+                    startCapture(mImageReader);
                 }
             };
         }
@@ -108,7 +130,7 @@ public class FloatWindowsService extends Service {
     }
 
     private void createImageReader() {
-        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+//        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         mWindowManager = (WindowManager) getApplicationContext().getSystemService(getApplication().WINDOW_SERVICE);
 
         DisplayMetrics metrics = new DisplayMetrics();
@@ -117,14 +139,38 @@ public class FloatWindowsService extends Service {
         mScreenWidth = metrics.widthPixels;
         mScreenHeight = metrics.heightPixels;
 //    mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGB_888, 1);
-        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
+
+        imageReaderinit();
+    }
+
+    private void imageReaderinit() {
+        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, 8);
+//
 //        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
 //            @Override
 //            public void onImageAvailable(ImageReader reader) {
-//
+//                startCapture(reader);
+//                Log.e("onImageAvailable", "-----onImageAvailable-------");
 //            }
-//        },handler1);
+//        }, getBackgroundHandler());
+//       Image image= mImageReader.acquireLatestImage();
+//       if (image!=null){
+//           image.close();
+//       }
+    }
 
+    //在后台线程里保存文件
+    Handler backgroundHandler;
+
+    private Handler getBackgroundHandler() {
+        if (backgroundHandler == null) {
+            HandlerThread backgroundThread =
+                    new HandlerThread("catwindow", android.os.Process
+                            .THREAD_PRIORITY_BACKGROUND);
+            backgroundThread.start();
+            backgroundHandler = new Handler(backgroundThread.getLooper());
+        }
+        return backgroundHandler;
     }
 
     public void startVirtual() {
@@ -152,17 +198,21 @@ public class FloatWindowsService extends Service {
     }
 
     private void virtualDisplay() {
-        if (mMediaProjection==null){
+        if (mMediaProjection == null) {
             mMediaProjection = getMediaProjectionManager().getMediaProjection(Activity.RESULT_OK, mResultData);
         }
+        if (mImageReader == null) {
+            mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, 8);
+        }
         //E/nulll: ddd:truemMediaProjection=truemImageReader;false
-        Log.e("nulll","ddd:"+(mResultData==null)+"mMediaProjection="+(mMediaProjection==null)+"mImageReader;"+(mImageReader==null));
+        Log.e("mResultData", "mResultData:" + (mResultData == null) + "mMediaProjection=" + (mMediaProjection == null) + "mImageReader;" + (mImageReader == null));
+        Log.e("nulll", "ddd:" + (mResultData == null) + "mMediaProjection=" + (mMediaProjection == null) + "mImageReader;" + (mImageReader == null));
         mVirtualDisplay = mMediaProjection.createVirtualDisplay("screen-mirror",
                 mScreenWidth, mScreenHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 mImageReader.getSurface(), null, null);
     }
 
-    private void startCapture() {
+    private void startCapture(ImageReader mImageReader) {
         Image image = null;
         if (imgageSize > 0) {
             try {
@@ -183,23 +233,34 @@ public class FloatWindowsService extends Service {
             mSaveTask = new SaveTask();
             Log.w("startCapture", "new mSaveTask");
 //            AsyncTaskCompat.executeParallel(mSaveTask, image);
-//            mSaveTask.execute(image);
-            mSaveTask.executeOnExecutor(Executors.newSingleThreadExecutor(),image);
+            mSaveTask.execute(image);
+//            mSaveTask.executeOnExecutor(Executors.newSingleThreadExecutor(), image);
         }
+
     }
 
     private void restartCapture() {
         Log.w("startCapture", "restartCapture");
+        mImageReader.discardFreeBuffers();
         imgageSize = 8;
         handler1.removeCallbacks(csreenshotRunnable);
         //如果异步任务不为空 并且状态是 运行时  ，就把他取消这个加载任务
         if (mSaveTask != null && mSaveTask.getStatus() == AsyncTask.Status.RUNNING) {
             mSaveTask.cancel(true);
         }
+        stopVirtual();
+        tearDownMediaProjection();
         mImageReader.close();
-
-        mImageReader = ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, imgageSize);
-        handler1.postDelayed(creatDeleteFileRunnable(), 1000);
+        mImageReader = null;
+        csreenshotRunnable = null;
+        handler1.postDelayed(creatDeleteFileRunnable(), 5000);
+        handler1.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+//                ImageReader.newInstance(mScreenWidth, mScreenHeight, PixelFormat.RGBA_8888, 8);
+                startScreenShot();
+            }
+        }, 500);
     }
 
     public class SaveTask extends AsyncTask<Image, Void, String> {
@@ -264,9 +325,9 @@ public class FloatWindowsService extends Service {
             super.onPostExecute(filename);
             Log.w("startCapture", "onPostExecutes=" + imgageSize + "//bitmap==" + filename);
 
-            FileUtil.getString(filename.replace(FileUtil.getAppPath(getApplicationContext()),"/sdcard"), getApplicationContext());
+            FileUtil.getString(filename.replace(FileUtil.getAppPath(getApplicationContext()), "/sdcard"), getApplicationContext());
             if (handler1 != null && imgageSize > 0) {
-                handler1.postDelayed(csreenshotRunnable, 300);
+                handler1.postDelayed(csreenshotRunnable, 500);
             } else {
                 startScreenShot();
             }
@@ -309,5 +370,71 @@ public class FloatWindowsService extends Service {
             }
         }
     }
+    private void createFloatView() {
+        mGestureDetector = new GestureDetector(getApplicationContext(), new FloatGestrueTouchListener());
+        mLayoutParams = new WindowManager.LayoutParams();
+//        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
+
+        mLayoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        mLayoutParams.format = PixelFormat.RGBA_8888;
+        // 设置Window flag
+        mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        mLayoutParams.gravity = Gravity.LEFT | Gravity.TOP;
+        mLayoutParams.x = mScreenWidth;
+        mLayoutParams.y = 100;
+        mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+
+
+        mFloatView = new ImageView(getApplicationContext());
+//        mFloatView.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_imagetool_crop));
+        mWindowManager.addView(mFloatView, mLayoutParams);
+    }
+    private class FloatGestrueTouchListener implements GestureDetector.OnGestureListener {
+        int lastX, lastY;
+        int paramX, paramY;
+
+        @Override
+        public boolean onDown(MotionEvent event) {
+            lastX = (int) event.getRawX();
+            lastY = (int) event.getRawY();
+            paramX = mLayoutParams.x;
+            paramY = mLayoutParams.y;
+            return true;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+//            startScreenShot();
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            int dx = (int) e2.getRawX() - lastX;
+            int dy = (int) e2.getRawY() - lastY;
+            mLayoutParams.x = paramX + dx;
+            mLayoutParams.y = paramY + dy;
+            // 更新悬浮窗位置
+            mWindowManager.updateViewLayout(mFloatView, mLayoutParams);
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            return false;
+        }
+    }
 }

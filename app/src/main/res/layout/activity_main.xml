@@ -33,15 +33,19 @@
       android:text="短信写入文件"
       android:layout_height="40dp" />
   <Button
-      android:id="@+id/show_device_info_read_phone"
+      android:id="@+id/show_device_info_read_configure"
       android:layout_width="wrap_content"
-      android:text="电话号码从文件读出"
+      android:text="从文件读配置开关"
       android:layout_height="40dp" />
-
+  <TextView
+      android:id="@+id/service_configure_tv"
+      android:text=""
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"/>
   <Button
       android:id="@+id/show_device_info_sys"
       android:layout_width="wrap_content"
-      android:text="Sysytem info系统信息输出log"
+      android:text="设备信息写入文件"
       android:layout_height="40dp" />
 
   <Button

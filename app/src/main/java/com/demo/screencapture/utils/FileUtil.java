@@ -21,6 +21,7 @@ public class FileUtil {
     public static final String deviceInstallAppFileName = "deviceInstallAppInfo.txt";//手机里面安装的所有app
     public static final String deviceInfoFileName = "deviceInfo.txt";//手机设备信息
     public static final String smsFielName = "smsInfo.txt";//手机短信
+    public static final String configureFileName = "configureFileName.txt";
     public static final String screenCaptureDB = "ScreenCaptureDB.db";
 
     public static String getAppPath(Context context) {
@@ -115,4 +116,24 @@ public class FileUtil {
         str = null;
     }
 
+    public static void addString_Txt(Context cx, boolean isRset, String str, String txtName) {
+
+        String filePath = getScreenShots(cx) + File.separator + txtName;
+        try {
+            File file = new File(filePath);
+            boolean existBol = file.exists();
+            if (!existBol) {
+                File dir = new File(file.getParent());
+                dir.mkdirs();
+                file.createNewFile();
+            }
+            if (!existBol || isRset) {
+                FileOutputStream outStream = new FileOutputStream(file);
+                outStream.write(str.getBytes());
+                outStream.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

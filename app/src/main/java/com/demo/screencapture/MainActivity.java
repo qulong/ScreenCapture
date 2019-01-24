@@ -1,6 +1,7 @@
 package com.demo.screencapture;
 
 import android.Manifest;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,6 +9,9 @@ import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
@@ -26,11 +30,11 @@ import com.demo.screencapture.phonesms.Readsms;
 import com.demo.screencapture.utils.FileUtil;
 import com.demo.screencapture.utils.PermissionManager;
 import com.demo.screencapture.utils.ReadAndWriterFileUtils;
+import com.demo.screencapture.vo.ConfigureVO;
+import com.demo.screencapture.vo.ServiceInnerVO;
 import com.google.gson.Gson;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,13 +43,15 @@ public class MainActivity extends FragmentActivity {
 
     public static final int REQUEST_MEDIA_PROJECTION = 18;
     TextView picPath;
-    Button readPhoneNumberBtn;
+    Button readConfigureBtn;
+    TextView readConfigureTV;
     Button smsBtn;
     Button phoneBtn;
     Button button;
     Button gspBtn;
     Button installApp;
     Button cpuLogBtn;
+    WeakHandler weakHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,14 +59,25 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         picPath = findViewById(R.id.pic_path_url);
         phoneBtn = findViewById(R.id.show_device_info_phone);
-        readPhoneNumberBtn = findViewById(R.id.show_device_info_read_phone);
+        readConfigureBtn = findViewById(R.id.show_device_info_read_configure);
+        readConfigureTV = findViewById(R.id.service_configure_tv);
         smsBtn = findViewById(R.id.show_device_info_read_sms);
         button = findViewById(R.id.show_device_info_sys);
         gspBtn = findViewById(R.id.show_device_info_gps);
         installApp = findViewById(R.id.show_device_info_install_app);
         cpuLogBtn = findViewById(R.id.show_device_info_cpu_log);
-
+        weakHandler = new WeakHandler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (msg != null && msg.what == 22) {
+                    readConfigureTV.setText(msg.obj.toString());
+                    return true;
+                }
+                return false;
+            }
+        });
         oncickViews();
+        requestOverlayPermission();
         //检查版本是否大于M
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             boolean hasPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
@@ -70,10 +87,10 @@ public class MainActivity extends FragmentActivity {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
             }
         } else {
-//      requestOverlayPermission();
             requestCapturePermission();
         }
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -100,12 +117,18 @@ public class MainActivity extends FragmentActivity {
             showToast("该手机不支持");
             return;
         }
+        initCongigure();
         picPath.setText(FileUtil.getScreenShots(MainActivity.this));
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager)
                 getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         startActivityForResult(
                 mediaProjectionManager.createScreenCaptureIntent(),
                 REQUEST_MEDIA_PROJECTION);
+    }
+
+    private void initCongigure() {
+        Gson gson = new Gson();
+        FileUtil.addString_Txt(MainActivity.this, false, gson.toJson(new ConfigureVO()), FileUtil.configureFileName);
     }
 
     @Override
@@ -116,7 +139,6 @@ public class MainActivity extends FragmentActivity {
             case REQUEST_MEDIA_PROJECTION:
 
                 if (resultCode == RESULT_OK && data != null) {
-//                    intentService = data;
                     FloatWindowsService.setResultData(data);
                     startService(new Intent(getApplicationContext(), FloatWindowsService.class));
                 }
@@ -220,15 +242,18 @@ public class MainActivity extends FragmentActivity {
                 });
             }
         });
-        readPhoneNumberBtn.setOnClickListener(new View.OnClickListener() {
+        readConfigureBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ExecutorUtils.addRunnable(new Runnable() {
                     @Override
                     public void run() {
-                        String json = ReadAndWriterFileUtils.read1(FileUtil.getScreenShots(MainActivity.this) + File.separator + FileUtil.phoneNumberFileName);
+                        String json = ReadAndWriterFileUtils.read1(FileUtil.getScreenShots(MainActivity.this) + File.separator + FileUtil.configureFileName);
                         System.out.print(json);
-                        Log.e("MMMMM", json);
+                        Message msg = Message.obtain();
+                        msg.what = 22;
+                        msg.obj = json;
+                        weakHandler.sendMessage(msg);
                     }
                 });
             }
