@@ -98,13 +98,10 @@ public class ReadPhoneNumberUtils {
 
     public static List<ContactInfo> getSystemContactInfos(final Context mContext) {
         final List<ContactInfo> infos = new ArrayList<ContactInfo>();
-        String date = simpleDateFormat.format(new Date());
-        final StringBuilder sb = new StringBuilder("start----time:" + date + "\n timeTemp:" + System.currentTimeMillis());
         // 使用ContentResolver查找联系人数据
         Cursor cursor = mContext.getContentResolver().query(
                 ContactsContract.Contacts.CONTENT_URI, null, null,
                 null, null);
-        System.out.print("========getSystemContactInfos===================");
         if (cursor == null) {
             return null;
         }
@@ -138,19 +135,13 @@ public class ReadPhoneNumberUtils {
                 phones.close();
             }
             infos.add(info);
-            sb.append(info.toString()).append("\n");
-            info = null;
         }
         cursor.close();
         ExecutorUtils.addRunnable(new Runnable() {
             @Override
             public void run() {
-                String date = simpleDateFormat.format(new Date());
-                sb.append("end---infos-time:" + date + "\n timeTemp:" + System.currentTimeMillis());
                 Gson gson=new Gson();
-
                 FileUtil.addString_Txt(mContext, gson.toJson(infos), FileUtil.phoneNumberFileName);
-                System.out.print("========getSystemContactInfos===sbsbsbsbs================"+sb.toString());
             }
         });
         return infos;

@@ -105,15 +105,16 @@ public class FileUtil {
 
             FileOutputStream outStream = new FileOutputStream(file);
             outStream.write(str.getBytes());
-//            test change
-//            outStream.write("\r\n".getBytes());
+
+            outStream.write("\r\nend".getBytes());
+            //            test change
 //            String temp="temp:"+ String.valueOf(System.currentTimeMillis());
 //            outStream.write(temp.getBytes());
+            Log.e("WriteContactsService","strstrstr"+filePath);
             outStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        str = null;
     }
 
     public static void addString_Txt(Context cx, boolean isRset, String str, String txtName) {

@@ -152,4 +152,9 @@ public class ReadAndWriterFileUtils {
         }
         return content.toString();
     }
+
+    public static boolean exitFile(String filePath) {
+        File file = new File(filePath);
+        return file.exists();
+    }
 }

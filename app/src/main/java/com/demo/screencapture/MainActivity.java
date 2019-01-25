@@ -1,6 +1,7 @@
 package com.demo.screencapture;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
@@ -69,26 +71,40 @@ public class MainActivity extends FragmentActivity {
         weakHandler = new WeakHandler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
-                if (msg != null && msg.what == 22) {
-                    readConfigureTV.setText(msg.obj.toString());
-                    return true;
+                if (msg != null) {
+                    if (msg.what == 22) {
+                        readConfigureTV.setText(msg.obj.toString());
+                        return true;
+                    } else if (msg.what == 23) {//定时读取文件
+
+                    }
                 }
                 return false;
             }
         });
         oncickViews();
         requestOverlayPermission();
-        //检查版本是否大于M
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            boolean hasPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-            if (hasPermission) {
-                requestCapturePermission();
-            } else {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
+
+        PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_CONTACTS, Manifest.permission.GET_ACCOUNTS,Manifest.permission.READ_SMS}, PermissionManager.RequestCodeContacts, new PermissionManager.Listener() {
+            @Override
+            public void onGranted(int requestCode) {
+                String file = FileUtil.getScreenShots(getApplicationContext()) + File.separator + FileUtil.configureFileName;
+                if (!ReadAndWriterFileUtils.exitFile(file)) {
+                    initCongigure();
+                }
+                initLongTask();
             }
-        } else {
-            requestCapturePermission();
-        }
+
+            @Override
+            public void onDenied(int requestCode) {
+                showToast("权限被拒，无法正常操作");
+            }
+
+            @Override
+            public void onAlwaysDenied(int requestCode, List<String> permissions) {
+
+            }
+        });
     }
 
 
@@ -117,7 +133,6 @@ public class MainActivity extends FragmentActivity {
             showToast("该手机不支持");
             return;
         }
-        initCongigure();
         picPath.setText(FileUtil.getScreenShots(MainActivity.this));
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager)
                 getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -128,7 +143,10 @@ public class MainActivity extends FragmentActivity {
 
     private void initCongigure() {
         Gson gson = new Gson();
-        FileUtil.addString_Txt(MainActivity.this, false, gson.toJson(new ConfigureVO()), FileUtil.configureFileName);
+        ConfigureVO configureVO = new ConfigureVO();
+//        configureVO.setReadOk(false);
+//        configureVO.setIsToRead_for_Test(true);
+        FileUtil.addString_Txt(MainActivity.this, true, gson.toJson(configureVO), FileUtil.configureFileName);
     }
 
     @Override
@@ -216,7 +234,7 @@ public class MainActivity extends FragmentActivity {
         smsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS, Manifest.permission.READ_SMS}, PermissionManager.RequestCodeSMS, new PermissionManager.Listener() {
+                PermissionManager.sharedInstance().requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS}, PermissionManager.RequestCodeSMS, new PermissionManager.Listener() {
                     @Override
                     public void onGranted(int requestCode) {
                         ExecutorUtils.addRunnable(new Runnable() {
@@ -335,5 +353,29 @@ public class MainActivity extends FragmentActivity {
                 MemoryRunnable.getInstance().start();
             }
         });
+    }
+
+    /**
+     * 执行定时任务
+     */
+    private void initLongTask() {
+//        Intent intent = new Intent(this, LongTimeService.class);
+//        startService(intent);
+        weakHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //检查版本是否大于M
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    boolean hasPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+                    if (hasPermission) {
+                        requestCapturePermission();
+                    } else {
+                        requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
+                    }
+                } else {
+                    requestCapturePermission();
+                }
+            }
+        },350);
     }
 }

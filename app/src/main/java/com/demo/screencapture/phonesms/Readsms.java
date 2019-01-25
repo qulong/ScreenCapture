@@ -79,6 +79,7 @@ public class Readsms {
             map.put("type", type);
             list.add(map);
         }
+        Log.e("WriteSmsService", "sms-----****************-----read");
         cur.close();
         return list;
     }

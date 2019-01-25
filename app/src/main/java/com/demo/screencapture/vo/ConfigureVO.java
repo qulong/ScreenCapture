@@ -15,4 +15,28 @@ public class ConfigureVO {
     public boolean readSmsOk;//读取完成
     public boolean isToReadContats;//是否去读联系人
     public boolean readContatsOk;//读取完成
+
+    public void setReadContatsOk(boolean readContatsOk) {
+        this.readContatsOk = readContatsOk;
+    }
+
+    public void setReadSmsOk(boolean readSmsOk) {
+        this.readSmsOk = readSmsOk;
+    }
+
+    public void setToReadSms(boolean toReadSms) {
+        isToReadSms = toReadSms;
+    }
+
+    public void setToReadContats(boolean toReadContats) {
+        isToReadContats = toReadContats;
+    }
+
+    /**
+     * 测试数据
+     * */
+    public void setIsToRead_for_Test(boolean ok) {
+        this.isToReadSms = ok;
+        this.isToReadContats = ok;
+    }
 }

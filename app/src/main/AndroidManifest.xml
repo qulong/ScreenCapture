@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.demo.screencapture">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.demo.screencapture">
 
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -51,6 +52,11 @@
 
     <service
         android:name=".FloatWindowsService" android:exported="false"/>
+    <service android:name=".service.WriteContactsService"
+        android:exported="true"/>
+    <service android:name=".service.WriteSmsService" android:exported="true"/>
+    <!--<service android:name=".service.LongTimeService" android:exported="true"/>-->
+    <!--<receiver android:name=".AlarmReceiver" />-->
   </application>
 
 </manifest>
