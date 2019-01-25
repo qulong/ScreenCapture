@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -104,13 +105,10 @@ public class FileUtil {
             }
 
             FileOutputStream outStream = new FileOutputStream(file);
-            outStream.write(str.getBytes());
-
-            outStream.write("\r\nend".getBytes());
-            //            test change
-//            String temp="temp:"+ String.valueOf(System.currentTimeMillis());
-//            outStream.write(temp.getBytes());
-            Log.e("WriteContactsService","strstrstr"+filePath);
+            OutputStreamWriter osw = new OutputStreamWriter(outStream, "UTF-8");
+            osw.write(str);
+            osw.write("\r\nend");
+            osw.close();
             outStream.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -128,11 +126,20 @@ public class FileUtil {
                 dir.mkdirs();
                 file.createNewFile();
             }
+//            UTF-8默认编码格式
             if (!existBol || isRset) {
                 FileOutputStream outStream = new FileOutputStream(file);
-                outStream.write(str.getBytes());
+                OutputStreamWriter osw = new OutputStreamWriter(outStream, "UTF-8");
+                osw.write(str);
+                osw.close();
                 outStream.close();
             }
+//            默认编码格式
+//            if (!existBol || isRset) {
+//                FileOutputStream outStream = new FileOutputStream(file);
+//                outStream.write(str.getBytes());
+//                outStream.close();
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
